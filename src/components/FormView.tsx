@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Form } from '../store/formStore';
@@ -10,7 +10,6 @@ import toast from 'react-hot-toast';
 
 export const FormView = () => {
   const { formId } = useParams<{ formId: string }>();
-  const navigate = useNavigate();
   const { submitFormResponse } = useFormStore();
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);

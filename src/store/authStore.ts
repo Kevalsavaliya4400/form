@@ -1,13 +1,24 @@
 import { create } from 'zustand';
-import { auth } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendEmailVerification,
   User
 } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
+
+interface UserData {
+  email: string;
+  fullName: string;
+  companyName: string;
+  industry: string;
+  interests: string[];
+  additionalInfo?: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -15,7 +26,7 @@ interface AuthState {
   error: string | null;
   initialized: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData: UserData) => Promise<void>;
   signOut: () => Promise<void>;
   initialize: () => () => void;
 }
@@ -43,7 +54,15 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     try {
       set({ loading: true, error: null });
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!userCredential.user.emailVerified) {
+        await firebaseSignOut(auth);
+        set({ error: 'Please verify your email before signing in' });
+        toast.error('Please verify your email before signing in');
+        throw new Error('Email not verified');
+      }
+
       toast.success('Signed in successfully');
     } catch (error: any) {
       const errorMessage = error.code === 'auth/invalid-credential' 
@@ -57,11 +76,25 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signUp: async (email, password) => {
+  signUp: async (email, password, userData) => {
     try {
       set({ loading: true, error: null });
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast.success('Account created successfully');
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Create user profile in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        ...userData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+      
+      // Sign out the user until they verify their email
+      await firebaseSignOut(auth);
+      
+      toast.success('Account created! Please check your email to verify your account');
     } catch (error: any) {
       const errorMessage = error.code === 'auth/email-already-in-use'
         ? 'Email already in use'
