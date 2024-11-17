@@ -4,7 +4,7 @@ import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/fires
 import { db } from '../lib/firebase';
 import { Form } from '../store/formStore';
 import { FormPreview } from './FormPreview';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const FormView = () => {
@@ -22,8 +22,7 @@ export const FormView = () => {
         const formDoc = await getDoc(doc(db, 'forms', formId));
         
         if (!formDoc.exists()) {
-          setError('Sorry, this form is not available');
-          setLoading(false);
+          setError('This form is not available');
           return;
         }
 
@@ -31,7 +30,6 @@ export const FormView = () => {
         
         if (!formData.published) {
           setError('This form is currently not accepting responses');
-          setLoading(false);
           return;
         }
 
@@ -60,7 +58,11 @@ export const FormView = () => {
       });
       
       setSubmitted(true);
-      toast.success('Thank you for your submission!');
+      toast.success(form.settings?.submitMessage || 'Thank you for your submission!');
+
+      if (form.settings?.redirectUrl) {
+        window.location.href = form.settings.redirectUrl;
+      }
     } catch (err) {
       console.error('Error submitting form:', err);
       toast.error('Unable to submit form. Please try again.');
@@ -79,6 +81,9 @@ export const FormView = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-sm p-8 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <AlertCircle className="h-6 w-6 text-red-600" />
+          </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             {error || 'Form Not Found'}
           </h2>
@@ -101,9 +106,7 @@ export const FormView = () => {
           <p className="text-gray-600 mb-6">
             {form.settings?.submitMessage || 'Your response has been recorded successfully.'}
           </p>
-          {form.settings?.redirectUrl ? (
-            window.location.href = form.settings.redirectUrl
-          ) : (
+          {!form.settings?.redirectUrl && (
             <button
               onClick={() => {
                 setSubmitted(false);
@@ -121,13 +124,17 @@ export const FormView = () => {
 
   return (
     <div className="min-h-screen py-12 bg-gray-50">
-      <FormPreview
-        title={form.title}
-        description={form.description}
-        elements={form.elements}
-        style={form.style}
-        onSubmit={handleSubmit}
-      />
+      <div className="max-w-4xl mx-auto px-4">
+        <FormPreview
+          title={form.title}
+          description={form.description}
+          elements={form.elements}
+          style={form.style}
+          onSubmit={handleSubmit}
+          showHeader={true}
+          showFooter={true}
+        />
+      </div>
     </div>
   );
 };

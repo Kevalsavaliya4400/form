@@ -40,7 +40,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: () => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      (user) => {
+      async (user) => {
+        if (user && !user.emailVerified) {
+          await firebaseSignOut(auth);
+          set({ user: null, loading: false, initialized: true });
+          return;
+        }
         set({ user, loading: false, initialized: true });
       },
       (error) => {
@@ -58,17 +63,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       
       if (!userCredential.user.emailVerified) {
         await firebaseSignOut(auth);
-        set({ error: 'Please verify your email before signing in' });
+        set({ error: 'Please verify your email before signing in', user: null });
         toast.error('Please verify your email before signing in');
         throw new Error('Email not verified');
       }
 
+      set({ user: userCredential.user });
       toast.success('Signed in successfully');
     } catch (error: any) {
       const errorMessage = error.code === 'auth/invalid-credential' 
         ? 'Invalid email or password'
         : error.message;
-      set({ error: errorMessage });
+      set({ error: errorMessage, user: null });
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -93,6 +99,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       
       // Sign out the user until they verify their email
       await firebaseSignOut(auth);
+      set({ user: null });
       
       toast.success('Account created! Please check your email to verify your account');
     } catch (error: any) {

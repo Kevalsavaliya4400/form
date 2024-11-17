@@ -17,27 +17,29 @@ import {
 import { db, serverTimestamp } from '../lib/firebase';
 import toast from 'react-hot-toast';
 
-export interface FormStyle {
-  backgroundColor: string;
-  textColor: string;
-  buttonColor: string;
-  borderRadius: string;
-  fontFamily: string;
-}
-
 export interface FormElement {
   id: string;
-  type: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'heading' | 'paragraph' | 'image' | 'divider';
+  type: 'text' | 'number' | 'email' | 'textarea' | 'select' | 'radio' | 'checkbox' | 'date' | 'time' | 'phone' | 'file' | 'rating' | 'heading' | 'paragraph' | 'image' | 'divider';
   label: string;
   required: boolean;
   options?: string[];
   placeholder?: string;
+  description?: string;
+  validation?: {
+    minLength?: number;
+    maxLength?: number;
+    pattern?: string;
+    min?: number;
+    max?: number;
+    acceptedFiles?: string[];
+  };
   style?: {
     fontSize?: string;
     textAlign?: 'left' | 'center' | 'right';
     width?: string;
     height?: string;
     imageUrl?: string;
+    columns?: number;
   };
 }
 
@@ -54,7 +56,13 @@ export interface Form {
   title: string;
   description?: string;
   elements: FormElement[];
-  style: FormStyle;
+  style: {
+    backgroundColor: string;
+    textColor: string;
+    buttonColor: string;
+    borderRadius: string;
+    fontFamily: string;
+  };
   userId: string;
   published: boolean;
   submissions: FormSubmission[];
@@ -87,8 +95,6 @@ interface FormState {
   unpublishForm: (formId: string) => Promise<void>;
   submitFormResponse: (formId: string, responses: Record<string, any>, email?: string) => Promise<void>;
   setCurrentForm: (form: Form | null) => void;
-  fetchFormsPaginated: (userId: string, lastDoc?: any, pageSize?: number) => Promise<{ forms: Form[]; lastVisible: any }>;
-  fetchSubmissionsPaginated: (formId: string, lastDoc?: any, pageSize?: number) => Promise<{ submissions: FormSubmission[]; lastVisible: any }>;
 }
 
 export const useFormStore = create<FormState>((set, get) => ({
@@ -179,11 +185,6 @@ export const useFormStore = create<FormState>((set, get) => ({
         updatedAt: serverTimestamp(),
         published: false,
         submissions: [],
-        settings: {
-          collectEmail: true,
-          submitMessage: 'Thank you for your submission!',
-          notifyOnSubmission: false,
-        },
       };
       
       const docRef = await addDoc(collection(db, 'forms'), form);
@@ -330,73 +331,4 @@ export const useFormStore = create<FormState>((set, get) => ({
   },
 
   setCurrentForm: (form) => set({ currentForm: form }),
-
-  fetchFormsPaginated: async (userId, lastDoc, pageSize = 10) => {
-    try {
-      set({ loading: true, error: null });
-      let q = query(
-        collection(db, 'forms'),
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc'),
-        limit(pageSize)
-      );
-
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-
-      const snapshot = await getDocs(q);
-      const forms = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        publishedAt: doc.data().publishedAt?.toDate(),
-      })) as Form[];
-
-      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      
-      return { forms, lastVisible };
-    } catch (error: any) {
-      console.error('Error fetching forms:', error);
-      set({ error: error.message });
-      toast.error('Failed to load forms');
-      return { forms: [], lastVisible: null };
-    } finally {
-      set({ loading: false });
-    }
-  },
-
-  fetchSubmissionsPaginated: async (formId, lastDoc, pageSize = 20) => {
-    try {
-      set({ loading: true, error: null });
-      let q = query(
-        collection(db, `forms/${formId}/submissions`),
-        orderBy('submittedAt', 'desc'),
-        limit(pageSize)
-      );
-
-      if (lastDoc) {
-        q = query(q, startAfter(lastDoc));
-      }
-
-      const snapshot = await getDocs(q);
-      const submissions = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        submittedAt: doc.data().submittedAt?.toDate(),
-      })) as FormSubmission[];
-
-      const lastVisible = snapshot.docs[snapshot.docs.length - 1];
-      
-      return { submissions, lastVisible };
-    } catch (error: any) {
-      console.error('Error fetching submissions:', error);
-      set({ error: error.message });
-      toast.error('Failed to load submissions');
-      return { submissions: [], lastVisible: null };
-    } finally {
-      set({ loading: false });
-    }
-  }
 }));

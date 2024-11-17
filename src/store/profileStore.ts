@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import toast from 'react-hot-toast';
 
@@ -34,19 +34,26 @@ export const useProfileStore = create<ProfileState>((set) => ({
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
-        const data = docSnap.data() as UserProfile;
+        const data = docSnap.data();
         set({ 
           profile: {
             ...data,
-            createdAt: data.createdAt.toDate(),
-            updatedAt: data.updatedAt.toDate()
-          }
+            createdAt: data.createdAt?.toDate(),
+            updatedAt: data.updatedAt?.toDate()
+          } as UserProfile
         });
+      } else {
+        set({ error: 'Profile not found' });
+        toast.error('Profile not found');
       }
     } catch (error: any) {
       console.error('Error fetching profile:', error);
       set({ error: error.message });
-      toast.error('Failed to load profile');
+      if (error.code === 'permission-denied') {
+        toast.error('Please sign in to view your profile');
+      } else {
+        toast.error('Failed to load profile');
+      }
     } finally {
       set({ loading: false });
     }
@@ -59,7 +66,7 @@ export const useProfileStore = create<ProfileState>((set) => ({
       
       await updateDoc(docRef, {
         ...updates,
-        updatedAt: new Date()
+        updatedAt: serverTimestamp()
       });
 
       set((state) => ({
@@ -74,7 +81,11 @@ export const useProfileStore = create<ProfileState>((set) => ({
     } catch (error: any) {
       console.error('Error updating profile:', error);
       set({ error: error.message });
-      toast.error('Failed to update profile');
+      if (error.code === 'permission-denied') {
+        toast.error('Please sign in to update your profile');
+      } else {
+        toast.error('Failed to update profile');
+      }
       throw error;
     } finally {
       set({ loading: false });
