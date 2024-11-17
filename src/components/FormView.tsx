@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Form } from '../store/formStore';
 import { FormPreview } from './FormPreview';
-import { useFormStore } from '../store/formStore';
 import { CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const FormView = () => {
   const { formId } = useParams<{ formId: string }>();
-  const { submitFormResponse } = useFormStore();
   const [form, setForm] = useState<Form | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
@@ -24,7 +22,7 @@ export const FormView = () => {
         const formDoc = await getDoc(doc(db, 'forms', formId));
         
         if (!formDoc.exists()) {
-          setError('Form not found');
+          setError('Sorry, this form is not available');
           setLoading(false);
           return;
         }
@@ -32,23 +30,18 @@ export const FormView = () => {
         const formData = formDoc.data() as Form;
         
         if (!formData.published) {
-          setError('This form is not available');
+          setError('This form is currently not accepting responses');
           setLoading(false);
           return;
         }
 
-        // Get submission count
-        const submissionsSnapshot = await getDocs(collection(db, `forms/${formId}/submissions`));
-        const submissions = submissionsSnapshot.docs;
-
         setForm({
           ...formData,
           id: formDoc.id,
-          submissions: submissions
         });
       } catch (err) {
         console.error('Error loading form:', err);
-        setError('Failed to load form');
+        setError('Unable to load the form. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -58,21 +51,25 @@ export const FormView = () => {
   }, [formId]);
 
   const handleSubmit = async (responses: Record<string, any>) => {
-    if (!formId) return;
+    if (!formId || !form) return;
     
     try {
-      await submitFormResponse(formId, responses);
+      await addDoc(collection(db, `forms/${formId}/submissions`), {
+        responses,
+        submittedAt: serverTimestamp(),
+      });
+      
       setSubmitted(true);
-      toast.success('Form submitted successfully!');
+      toast.success('Thank you for your submission!');
     } catch (err) {
       console.error('Error submitting form:', err);
-      toast.error('Failed to submit form');
+      toast.error('Unable to submit form. Please try again.');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -80,13 +77,13 @@ export const FormView = () => {
 
   if (error || !form) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-sm p-8 text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             {error || 'Form Not Found'}
           </h2>
           <p className="text-gray-600">
-            The form you're looking for doesn't exist or has been removed.
+            Please check the form URL or contact the form owner.
           </p>
         </div>
       </div>
@@ -102,7 +99,7 @@ export const FormView = () => {
           </div>
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Thank You!</h2>
           <p className="text-gray-600 mb-6">
-            {form.settings?.submitMessage || 'Your response has been submitted successfully.'}
+            {form.settings?.submitMessage || 'Your response has been recorded successfully.'}
           </p>
           {form.settings?.redirectUrl ? (
             window.location.href = form.settings.redirectUrl

@@ -12,6 +12,7 @@ import {
   Clock,
   CheckCircle,
   Code,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -29,16 +30,13 @@ export const Dashboard = () => {
     loading: formsLoading,
   } = useFormStore();
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
-  const [submissionCounts, setSubmissionCounts] = useState<
-    Record<string, number>
-  >({});
+  const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const loadData = async () => {
       if (!authLoading && user) {
         try {
           await fetchForms(user.uid);
-          // Fetch submission counts for each form
           const counts: Record<string, number> = {};
           for (const form of forms) {
             const submissionsSnapshot = await getDocs(
@@ -92,16 +90,20 @@ export const Dashboard = () => {
     }
   };
 
+  const getPublicFormUrl = (formId: string) => {
+    return `${window.location.origin}/form/${formId}`;
+  };
+
+  const copyPublicLink = (formId: string) => {
+    const publicUrl = getPublicFormUrl(formId);
+    navigator.clipboard.writeText(publicUrl);
+    toast.success('Public form link copied to clipboard');
+  };
+
   const copyEmbedCode = (formId: string) => {
     const embedCode = `<iframe src="${window.location.origin}/embed/${formId}" width="100%" height="600" frameborder="0"></iframe>`;
     navigator.clipboard.writeText(embedCode);
     toast.success('Embed code copied to clipboard');
-  };
-
-  const copyShareLink = (formId: string) => {
-    const shareLink = `${window.location.origin}/form/${formId}`;
-    navigator.clipboard.writeText(shareLink);
-    toast.success('Share link copied to clipboard');
   };
 
   if (authLoading || formsLoading) {
@@ -123,9 +125,7 @@ export const Dashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Forms</h1>
-            <p className="mt-2 text-gray-600">
-              Create, manage, and track your forms
-            </p>
+            <p className="mt-2 text-gray-600">Create, manage, and track your forms</p>
           </div>
           <Link
             to="/builder"
@@ -208,12 +208,21 @@ export const Dashboard = () => {
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Published
                         </div>
+                        <a
+                          href={getPublicFormUrl(form.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                        >
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          View Public Form
+                        </a>
                         <button
-                          onClick={() => copyShareLink(form.id)}
+                          onClick={() => copyPublicLink(form.id)}
                           className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                         >
                           <Copy className="h-4 w-4 mr-2" />
-                          Copy Share Link
+                          Copy Public Link
                         </button>
                         <button
                           onClick={() => copyEmbedCode(form.id)}
@@ -268,9 +277,7 @@ export const Dashboard = () => {
                 )}
 
                 <button
-                  onClick={() =>
-                    setSelectedForm(selectedForm === form.id ? null : form.id)
-                  }
+                  onClick={() => setSelectedForm(selectedForm === form.id ? null : form.id)}
                   className="w-full px-6 py-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
                 >
                   {selectedForm === form.id ? 'Show less' : 'Show more details'}
