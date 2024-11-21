@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Code,
   Link as LinkIcon,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -187,6 +188,15 @@ export const Dashboard = () => {
                       >
                         <Settings size={18} />
                       </Link>
+                      {form.published && (
+                        <Link
+                          to={`/builder/${form.id}?tab=submissions`}
+                          className="p-2 text-gray-400 hover:text-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                          title="View submissions"
+                        >
+                          <FileSpreadsheet size={18} />
+                        </Link>
+                      )}
                     </div>
                   </div>
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useFormStore } from '../store/formStore';
@@ -26,17 +26,20 @@ import useUndo from 'use-undo';
 
 export const FormBuilder = () => {
   const { formId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { currentForm, fetchForm, saveForm, updateForm } = useFormStore();
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
-  const [activeTab, setActiveTab] = useState('editor');
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get('tab');
+    return tab === 'submissions' ? 'submissions' : 'editor';
+  });
   const [showStyleEditor, setShowStyleEditor] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [zoom, setZoom] = useState(100);
-  const [showSubmissions, setShowSubmissions] = useState(false);
 
   // Initialize undo/redo state for elements
   const [
@@ -76,6 +79,13 @@ export const FormBuilder = () => {
     };
     loadForm();
   }, [formId]);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'submissions') {
+      setActiveTab('submissions');
+    }
+  }, [searchParams]);
 
   const handleSave = async () => {
     try {
@@ -149,9 +159,13 @@ export const FormBuilder = () => {
     setZoom(Math.max(zoom - 10, 50));
   };
 
-  const toggleSubmissions = () => {
-    setShowSubmissions(!showSubmissions);
-    setActiveTab('submissions');
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    if (tab === 'submissions') {
+      navigate(`/builder/${formId}?tab=submissions`);
+    } else {
+      navigate(`/builder/${formId}`);
+    }
   };
 
   if (loading) {
@@ -217,7 +231,7 @@ export const FormBuilder = () => {
 
               {/* View Controls */}
               <button
-                onClick={() => setActiveTab('editor')}
+                onClick={() => handleTabChange('editor')}
                 className={`p-2 rounded-lg ${
                   activeTab === 'editor' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
                 }`}
@@ -225,7 +239,7 @@ export const FormBuilder = () => {
                 <LayoutDashboard className="h-5 w-5" />
               </button>
               <button
-                onClick={() => setActiveTab('preview')}
+                onClick={() => handleTabChange('preview')}
                 className={`p-2 rounded-lg ${
                   activeTab === 'preview' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
                 }`}
@@ -244,7 +258,7 @@ export const FormBuilder = () => {
               {/* Submissions Button */}
               {formId && (
                 <button
-                  onClick={toggleSubmissions}
+                  onClick={() => handleTabChange('submissions')}
                   className={`p-2 rounded-lg ${
                     activeTab === 'submissions' ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
                   }`}
