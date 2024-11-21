@@ -39,15 +39,12 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* Public routes for viewing forms */}
         <Route path="/form/:formId" element={<FormView />} />
         <Route path="/embed/:formId" element={<FormEmbed />} />
-        {/* Protected routes */}
         <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/builder" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
         <Route path="/builder/:formId" element={<PrivateRoute><FormBuilder /></PrivateRoute>} />
-        {/* 404 route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster 
@@ -58,21 +55,7 @@ function App() {
           style: {
             background: theme === 'dark' ? '#1f2937' : '#fff',
             color: theme === 'dark' ? '#fff' : '#000',
-          },
-          success: {
-            duration: 3000,
-            iconTheme: {
-              primary: '#4ade80',
-              secondary: theme === 'dark' ? '#1f2937' : '#fff',
-            },
-          },
-          error: {
-            duration: 4000,
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: theme === 'dark' ? '#1f2937' : '#fff',
-            },
-          },
+          }
         }}
       />
     </div>

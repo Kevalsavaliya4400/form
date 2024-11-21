@@ -6,7 +6,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   sendEmailVerification,
-  User
+  User,
+  ActionCodeSettings
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
@@ -29,9 +30,16 @@ interface AuthState {
   signUp: (email: string, password: string, userData: UserData) => Promise<void>;
   signOut: () => Promise<void>;
   initialize: () => () => void;
+  resendVerificationEmail: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+// Configure email verification settings
+const actionCodeSettings: ActionCodeSettings = {
+  url: `${window.location.origin}/login`,
+  handleCodeInApp: true
+};
+
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: true,
   error: null,
@@ -41,11 +49,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     const unsubscribe = onAuthStateChanged(
       auth,
       async (user) => {
-        if (user && !user.emailVerified) {
-          await firebaseSignOut(auth);
-          set({ user: null, loading: false, initialized: true });
-          return;
-        }
         set({ user, loading: false, initialized: true });
       },
       (error) => {
@@ -71,9 +74,23 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: userCredential.user });
       toast.success('Signed in successfully');
     } catch (error: any) {
-      const errorMessage = error.code === 'auth/invalid-credential' 
-        ? 'Invalid email or password'
-        : error.message;
+      let errorMessage = 'Failed to sign in';
+      
+      switch (error.code) {
+        case 'auth/invalid-credential':
+          errorMessage = 'Invalid email or password';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later';
+          break;
+      }
+      
       set({ error: errorMessage, user: null });
       toast.error(errorMessage);
       throw error;
@@ -94,18 +111,50 @@ export const useAuthStore = create<AuthState>((set) => ({
         updatedAt: serverTimestamp()
       });
       
-      // Send verification email
-      await sendEmailVerification(userCredential.user);
+      // Send verification email with custom settings
+      await sendEmailVerification(userCredential.user, actionCodeSettings);
       
       // Sign out the user until they verify their email
       await firebaseSignOut(auth);
       set({ user: null });
       
-      toast.success('Account created! Please check your email to verify your account');
+      toast.success('Account created! Please check your email to verify your account. Check your spam folder if you don\'t see it.');
     } catch (error: any) {
-      const errorMessage = error.code === 'auth/email-already-in-use'
-        ? 'Email already in use'
-        : error.message;
+      let errorMessage = 'Failed to create account';
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'An account with this email already exists';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Invalid email address';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters';
+          break;
+      }
+      
+      set({ error: errorMessage });
+      toast.error(errorMessage);
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  resendVerificationEmail: async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      toast.error('No user found. Please try signing up again.');
+      return;
+    }
+
+    try {
+      set({ loading: true, error: null });
+      await sendEmailVerification(user, actionCodeSettings);
+      toast.success('Verification email sent! Please check your inbox and spam folder.');
+    } catch (error: any) {
+      const errorMessage = 'Failed to send verification email. Please try again later.';
       set({ error: errorMessage });
       toast.error(errorMessage);
       throw error;

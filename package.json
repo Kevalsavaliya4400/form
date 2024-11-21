@@ -28,7 +28,9 @@
     "react-loading-skeleton": "^3.4.0",
     "next-themes": "^0.2.1",
     "openai": "^4.28.0",
-    "@vitejs/plugin-react-swc": "^3.6.0"
+    "@vitejs/plugin-react-swc": "^3.6.0",
+    "tailwind-merge": "^2.2.1",
+    "use-undo": "^1.1.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
