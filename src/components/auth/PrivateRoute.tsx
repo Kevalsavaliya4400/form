@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Loader2 } from 'lucide-react';
 
@@ -10,6 +10,13 @@ interface Props {
 export const PrivateRoute = ({ children }: Props) => {
   const { user, loading, initialized } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Allow public access to form and embed routes
+  const isPublicRoute = location.pathname.startsWith('/form/') || location.pathname.startsWith('/embed/');
+  if (isPublicRoute) {
+    return <>{children}</>;
+  }
 
   useEffect(() => {
     if (initialized && !loading && !user) {

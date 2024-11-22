@@ -4,7 +4,7 @@ import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/fires
 import { db } from '../lib/firebase';
 import { Form } from '../store/formStore';
 import { FormPreview } from './FormPreview';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const FormView = () => {
@@ -72,7 +72,7 @@ export const FormView = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }

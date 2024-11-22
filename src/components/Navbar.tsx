@@ -7,10 +7,12 @@ import { ThemeToggle } from './ThemeToggle';
 export const Navbar = () => {
   const { user, signOut } = useAuthStore();
   const location = useLocation();
+  
+  // Don't show navbar on auth pages and public form pages
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
-
-  // Don't show navbar on auth pages
-  if (isAuthPage) return null;
+  const isPublicFormPage = location.pathname.startsWith('/form/') || location.pathname.startsWith('/embed/');
+  
+  if (isAuthPage || isPublicFormPage) return null;
 
   return (
     <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">

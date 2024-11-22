@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FormElement, FormStyle } from '../store/formStore';
-import { Check } from 'lucide-react';
+import { Check, Star, Upload } from 'lucide-react';
 
 interface FormPreviewProps {
   title: string;
@@ -23,6 +23,7 @@ export const FormPreview = ({
 }: FormPreviewProps) => {
   const [responses, setResponses] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<Record<string, File[]>>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -68,6 +69,21 @@ export const FormPreview = ({
         </div>
       </div>
     );
+  };
+
+  const handleFileChange = (elementId: string, files: FileList | null) => {
+    if (!files) return;
+    
+    const fileArray = Array.from(files);
+    setSelectedFiles(prev => ({
+      ...prev,
+      [elementId]: fileArray
+    }));
+    
+    setResponses(prev => ({
+      ...prev,
+      [elementId]: fileArray.map(file => file.name).join(', ')
+    }));
   };
 
   const renderElement = (element: FormElement) => {
@@ -227,6 +243,144 @@ export const FormPreview = ({
             </div>
             {errors[element.id] && (
               <p className="mt-1 text-sm text-red-500">{errors[element.id]}</p>
+            )}
+          </div>
+        );
+
+      case 'date':
+        return (
+          <div key={element.id} className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              {element.label}
+              {element.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <input
+              type="date"
+              value={responses[element.id] || ''}
+              onChange={(e) => setResponses({ ...responses, [element.id]: e.target.value })}
+              min={element.validation?.min}
+              max={element.validation?.max}
+              className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                errors[element.id] ? 'border-red-500' : 'border-gray-300'
+              }`}
+              style={{ borderRadius: style.borderRadius }}
+            />
+            {errors[element.id] && (
+              <p className="mt-1 text-sm text-red-500">{errors[element.id]}</p>
+            )}
+          </div>
+        );
+
+      case 'time':
+        return (
+          <div key={element.id} className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              {element.label}
+              {element.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <input
+              type="time"
+              value={responses[element.id] || ''}
+              onChange={(e) => setResponses({ ...responses, [element.id]: e.target.value })}
+              className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                errors[element.id] ? 'border-red-500' : 'border-gray-300'
+              }`}
+              style={{ borderRadius: style.borderRadius }}
+            />
+            {errors[element.id] && (
+              <p className="mt-1 text-sm text-red-500">{errors[element.id]}</p>
+            )}
+          </div>
+        );
+
+      case 'file':
+        return (
+          <div key={element.id} className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              {element.label}
+              {element.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                onChange={(e) => handleFileChange(element.id, e.target.files)}
+                accept={element.validation?.acceptedFiles?.join(',')}
+                className="hidden"
+                id={`file-${element.id}`}
+                multiple
+              />
+              <label
+                htmlFor={`file-${element.id}`}
+                className={`flex items-center justify-center w-full px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                  errors[element.id] ? 'border-red-500' : 'border-gray-300'
+                }`}
+                style={{ borderRadius: style.borderRadius }}
+              >
+                <Upload className="h-5 w-5 mr-2 text-gray-400" />
+                <span className="text-gray-600">
+                  {selectedFiles[element.id]?.length
+                    ? `${selectedFiles[element.id].length} file(s) selected`
+                    : 'Choose files'}
+                </span>
+              </label>
+            </div>
+            {selectedFiles[element.id]?.length > 0 && (
+              <div className="mt-2 text-sm text-gray-500">
+                Selected files: {selectedFiles[element.id].map(file => file.name).join(', ')}
+              </div>
+            )}
+            {errors[element.id] && (
+              <p className="mt-1 text-sm text-red-500">{errors[element.id]}</p>
+            )}
+          </div>
+        );
+
+      case 'rating':
+        return (
+          <div key={element.id} className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              {element.label}
+              {element.required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+            <div className="flex gap-2">
+              {Array.from({ length: element.options?.length || 5 }, (_, i) => i + 1).map((rating) => (
+                <button
+                  key={rating}
+                  type="button"
+                  onClick={() => setResponses({ ...responses, [element.id]: rating })}
+                  className={`p-2 rounded-lg border transition-colors ${
+                    responses[element.id] === rating
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'border-gray-300 hover:border-blue-500'
+                  }`}
+                >
+                  <Star
+                    className={`h-6 w-6 ${
+                      responses[element.id] === rating ? 'fill-current' : 'fill-none'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            {errors[element.id] && (
+              <p className="mt-1 text-sm text-red-500">{errors[element.id]}</p>
+            )}
+          </div>
+        );
+
+      case 'image':
+        return (
+          <div key={element.id} className="mb-4">
+            {element.style?.imageUrl && (
+              <img
+                src={element.style.imageUrl}
+                alt={element.label}
+                className="rounded-lg"
+                style={{
+                  width: element.style.width || '100%',
+                  height: element.style.height || 'auto'
+                }}
+              />
             )}
           </div>
         );
