@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useFormStore } from '../store/formStore';
+import { CreateFormModal } from './modals/CreateFormModal';
 import {
   PlusCircle,
   Copy,
@@ -14,6 +15,7 @@ import {
   Code,
   Link as LinkIcon,
   FileSpreadsheet,
+  Loader2,
 } from 'lucide-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -31,9 +33,8 @@ export const Dashboard = () => {
     loading: formsLoading,
   } = useFormStore();
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
-  const [submissionCounts, setSubmissionCounts] = useState<
-    Record<string, number>
-  >({});
+  const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -112,7 +113,7 @@ export const Dashboard = () => {
   if (authLoading || formsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -132,13 +133,13 @@ export const Dashboard = () => {
               Create, manage, and track your forms
             </p>
           </div>
-          <Link
-            to="/builder"
+          <button
+            onClick={() => setShowCreateModal(true)}
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <PlusCircle className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90 duration-300" />
             Create New Form
-          </Link>
+          </button>
         </div>
 
         {forms.length === 0 ? (
@@ -152,13 +153,13 @@ export const Dashboard = () => {
             <p className="text-gray-500 mb-8">
               Get started by creating a new form to collect responses
             </p>
-            <Link
-              to="/builder"
+            <button
+              onClick={() => setShowCreateModal(true)}
               className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
             >
               <PlusCircle className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90 duration-300" />
               Create New Form
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -309,6 +310,11 @@ export const Dashboard = () => {
           </div>
         )}
       </div>
+
+      <CreateFormModal 
+        isOpen={showCreateModal} 
+        onClose={() => setShowCreateModal(false)} 
+      />
     </div>
   );
 };
