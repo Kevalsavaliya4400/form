@@ -11,10 +11,9 @@ import {
   deleteDoc,
   orderBy,
   Timestamp,
-  limit,
-  startAfter
+  serverTimestamp
 } from 'firebase/firestore';
-import { db, serverTimestamp } from '../lib/firebase';
+import { db } from '../lib/firebase';
 import toast from 'react-hot-toast';
 
 export interface FormElement {
@@ -94,6 +93,8 @@ interface FormState {
   publishForm: (formId: string) => Promise<void>;
   unpublishForm: (formId: string) => Promise<void>;
   submitFormResponse: (formId: string, responses: Record<string, any>, email?: string) => Promise<void>;
+  updateSubmission: (formId: string, submissionId: string, responses: Record<string, any>) => Promise<void>;
+  deleteSubmission: (formId: string, submissionId: string) => Promise<void>;
   setCurrentForm: (form: Form | null) => void;
 }
 
@@ -326,6 +327,38 @@ export const useFormStore = create<FormState>((set, get) => ({
       console.error('Error submitting form:', error);
       set({ error: error.message, loading: false });
       toast.error('Failed to submit form');
+      throw error;
+    }
+  },
+
+  updateSubmission: async (formId, submissionId, responses) => {
+    try {
+      set({ loading: true, error: null });
+      const submissionRef = doc(db, `forms/${formId}/submissions/${submissionId}`);
+      await updateDoc(submissionRef, {
+        responses,
+        updatedAt: serverTimestamp()
+      });
+      
+      await get().fetchSubmissions(formId);
+      set({ loading: false });
+    } catch (error: any) {
+      console.error('Error updating submission:', error);
+      set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  deleteSubmission: async (formId, submissionId) => {
+    try {
+      set({ loading: true, error: null });
+      await deleteDoc(doc(db, `forms/${formId}/submissions/${submissionId}`));
+      
+      await get().fetchSubmissions(formId);
+      set({ loading: false });
+    } catch (error: any) {
+      console.error('Error deleting submission:', error);
+      set({ error: error.message, loading: false });
       throw error;
     }
   },

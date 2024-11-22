@@ -30,7 +30,9 @@
     "openai": "^4.28.0",
     "@vitejs/plugin-react-swc": "^3.6.0",
     "tailwind-merge": "^2.2.1",
-    "use-undo": "^1.1.1"
+    "use-undo": "^1.1.1",
+    "@tensorflow/tfjs": "^4.17.0",
+    "email-validator": "^2.0.4"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
