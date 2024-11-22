@@ -1,34 +1,17 @@
 import React, { useState } from 'react';
 import { Palette, Box, Type, Layout, Brush } from 'lucide-react';
-import { Section } from './style/Section';
-import { ColorPicker } from './style/ColorPicker';
-import { RangeInput } from './style/RangeInput';
-import { PresetButton } from './style/PresetButton';
-
-interface FormStyle {
-  backgroundColor: string;
-  backgroundGradient?: {
-    enabled: boolean;
-    startColor: string;
-    endColor: string;
-    direction: string;
-  };
-  textColor: string;
-  buttonColor: string;
-  borderRadius: string;
-  borderWidth: string;
-  borderColor: string;
-  borderStyle: string;
-  boxShadow: string;
-  fontFamily: string;
-}
+import { Section } from './Section';
+import { ColorPicker } from './ColorPicker';
+import { RangeInput } from './RangeInput';
+import { PresetButton } from './PresetButton';
+import type { FormStyle } from './types';
 
 interface StyleEditorProps {
   style: FormStyle;
   onChange: (style: FormStyle) => void;
 }
 
-export const StyleEditor = ({ style, onChange }: StyleEditorProps) => {
+export const StyleEditor: React.FC<StyleEditorProps> = ({ style, onChange }) => {
   const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null);
 
   const fonts = [
