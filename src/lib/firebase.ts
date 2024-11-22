@@ -26,6 +26,10 @@ const firestoreSettings = {
 export const db = initializeFirestore(app, firestoreSettings);
 export const auth = getAuth(app);
 
+// Configure auth settings
+auth.useDeviceLanguage(); // Use the device's language
+auth.settings.appVerificationDisabledForTesting = false; // Enable verification in production
+
 // Enable offline persistence for Firestore
 enableIndexedDbPersistence(db, {
   synchronizeTabs: true

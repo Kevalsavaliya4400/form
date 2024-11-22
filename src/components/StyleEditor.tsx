@@ -17,11 +17,11 @@ interface StyleEditorProps {
 
 export const StyleEditor = ({ style, onChange }: StyleEditorProps) => {
   const fonts = [
-    'Inter, system-ui, sans-serif',
+    'Poppins, sans-serif',
+    'Inter, sans-serif',
     'Arial, sans-serif',
     'Georgia, serif',
     'Verdana, sans-serif',
-    'Roboto, sans-serif',
   ];
 
   const handleChange = (key: keyof FormStyle, value: string) => {
@@ -32,7 +32,7 @@ export const StyleEditor = ({ style, onChange }: StyleEditorProps) => {
     <div className="p-6 space-y-8">
       <div className="flex items-center gap-2 mb-6">
         <Settings className="h-5 w-5 text-gray-500" />
-        <h2 className="text-lg font-semibold">Style Settings</h2>
+        <h2 className="text-lg font-semibold font-heading">Style Settings</h2>
       </div>
 
       <div className="space-y-6">
@@ -117,7 +117,7 @@ export const StyleEditor = ({ style, onChange }: StyleEditorProps) => {
             className="w-full px-3 py-2 border rounded-lg text-sm"
           >
             {fonts.map((font) => (
-              <option key={font} value={font} style={{ fontFamily: font }}>
+              <option key={font} value={font} style={{ fontFamily: font.split(',')[0] }}>
                 {font.split(',')[0]}
               </option>
             ))}

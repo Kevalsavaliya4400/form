@@ -31,7 +31,9 @@ export const Dashboard = () => {
     loading: formsLoading,
   } = useFormStore();
   const [selectedForm, setSelectedForm] = useState<string | null>(null);
-  const [submissionCounts, setSubmissionCounts] = useState<Record<string, number>>({});
+  const [submissionCounts, setSubmissionCounts] = useState<
+    Record<string, number>
+  >({});
 
   useEffect(() => {
     const loadData = async () => {
@@ -109,7 +111,7 @@ export const Dashboard = () => {
 
   if (authLoading || formsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -121,26 +123,28 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-white to-blue-50 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Forms</h1>
-            <p className="mt-2 text-gray-600">Create, manage, and track your forms</p>
+            <p className="mt-2 text-gray-600">
+              Create, manage, and track your forms
+            </p>
           </div>
           <Link
             to="/builder"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
           >
-            <PlusCircle className="h-5 w-5 mr-2" />
+            <PlusCircle className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90 duration-300" />
             Create New Form
           </Link>
         </div>
 
         {forms.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-sm p-12 text-center border border-blue-100">
             <div className="mx-auto h-16 w-16 text-blue-500 mb-4">
-              <PlusCircle className="h-full w-full" />
+              <PlusCircle className="h-full w-full animate-pulse" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Create your first form
@@ -150,9 +154,9 @@ export const Dashboard = () => {
             </p>
             <Link
               to="/builder"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5"
             >
-              <PlusCircle className="h-5 w-5 mr-2" />
+              <PlusCircle className="h-5 w-5 mr-2 transition-transform group-hover:rotate-90 duration-300" />
               Create New Form
             </Link>
           </div>
@@ -161,100 +165,106 @@ export const Dashboard = () => {
             {forms.map((form) => (
               <div
                 key={form.id}
-                className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:border-blue-500 transition-colors"
+                className="bg-white/95 backdrop-blur-sm rounded-xl shadow-sm overflow-hidden border border-blue-100 hover:border-blue-500 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                      <div className="inline-flex px-4 py-1 rounded-full text-base font-semibold bg-white/20 backdrop-blur-md text-black border border-blue/20 shadow-l">
                         {form.title}
-                      </h3>
-                      <p className="text-gray-500 text-sm">
+                      </div>
+                      <p className="text-gray-500 text-sm mt-2">
                         {form.description || 'No description'}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleDelete(form.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                        className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors duration-300 group"
                         title="Delete form"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 className="h-5 w-5 transform group-hover:rotate-12 transition-transform duration-300" />
                       </button>
                       <Link
                         to={`/builder/${form.id}`}
-                        className="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-colors"
+                        className="p-2 text-gray-400 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-colors duration-300 group"
                         title="Edit form"
                       >
-                        <Settings size={18} />
+                        <Settings className="h-5 w-5 transform group-hover:rotate-90 transition-transform duration-300" />
                       </Link>
                       {form.published && (
                         <Link
                           to={`/builder/${form.id}?tab=submissions`}
-                          className="p-2 text-gray-400 hover:text-green-500 rounded-lg hover:bg-green-50 transition-colors"
+                          className="p-2 text-gray-400 hover:text-green-500 rounded-lg hover:bg-green-50 transition-colors duration-300 group"
                           title="View submissions"
                         >
-                          <FileSpreadsheet size={18} />
+                          <FileSpreadsheet className="h-5 w-5 transform group-hover:scale-110 transition-transform duration-300" />
                         </Link>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <BarChart2 className="h-4 w-4 mr-1" />
-                      {submissionCounts[form.id] || 0} responses
+                    <div className="flex items-center text-sm text-gray-500 group">
+                      <BarChart2 className="h-4 w-4 mr-1 group-hover:text-blue-500 transition-colors duration-300" />
+                      <span className="group-hover:text-blue-500 transition-colors duration-300">
+                        {submissionCounts[form.id] || 0} responses
+                      </span>
                     </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {new Date(form.updatedAt).toLocaleDateString()}
+                    <div className="flex items-center text-sm text-gray-500 group">
+                      <Clock className="h-4 w-4 mr-1 group-hover:text-blue-500 transition-colors duration-300" />
+                      <span className="group-hover:text-blue-500 transition-colors duration-300">
+                        {new Date(form.updatedAt).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     {form.published ? (
                       <>
-                        <div className="flex items-center text-sm text-green-600 mb-4">
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Published
+                        <div className="flex items-center text-sm text-green-600 mb-4 group">
+                          <CheckCircle className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-300" />
+                          <span className="group-hover:text-green-700 transition-colors duration-300">
+                            Published
+                          </span>
                         </div>
                         <a
                           href={getPublicFormUrl(form.id)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow group"
                         >
-                          <LinkIcon className="h-4 w-4 mr-2" />
+                          <LinkIcon className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                           View Public Form
                         </a>
                         <button
                           onClick={() => copyPublicLink(form.id)}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow group"
                         >
-                          <Copy className="h-4 w-4 mr-2" />
+                          <Copy className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" />
                           Copy Public Link
                         </button>
                         <button
                           onClick={() => copyEmbedCode(form.id)}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow group"
                         >
-                          <Code className="h-4 w-4 mr-2" />
+                          <Code className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                           Get Embed Code
                         </button>
                         <button
                           onClick={() => handleUnpublish(form.id)}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                          className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow group"
                         >
-                          <ExternalLink className="h-4 w-4 mr-2" />
+                          <ExternalLink className="h-4 w-4 mr-2 group-hover:-translate-y-1 transition-transform duration-300" />
                           Unpublish Form
                         </button>
                       </>
                     ) : (
                       <button
                         onClick={() => handlePublish(form.id)}
-                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                        className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-0.5 group"
                       >
-                        <ExternalLink className="h-4 w-4 mr-2" />
+                        <ExternalLink className="h-4 w-4 mr-2 group-hover:translate-y-0.5 transition-transform duration-300" />
                         Publish Form
                       </button>
                     )}
@@ -262,7 +272,7 @@ export const Dashboard = () => {
                 </div>
 
                 {selectedForm === form.id && (
-                  <div className="border-t border-gray-100 bg-gray-50 p-4">
+                  <div className="border-t border-blue-100 bg-blue-50/50 backdrop-blur-sm p-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-500">Created:</span>
@@ -287,8 +297,10 @@ export const Dashboard = () => {
                 )}
 
                 <button
-                  onClick={() => setSelectedForm(selectedForm === form.id ? null : form.id)}
-                  className="w-full px-6 py-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  onClick={() =>
+                    setSelectedForm(selectedForm === form.id ? null : form.id)
+                  }
+                  className="w-full px-6 py-3 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all duration-300 border-t border-blue-100 group"
                 >
                   {selectedForm === form.id ? 'Show less' : 'Show more details'}
                 </button>
